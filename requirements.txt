@@ -1,0 +1,41 @@
+# Credit Decision Screening System - Dependencies
+# Multi-Agent Infrastructure with Google ADK Support
+
+# Vector Database (Primary - Qdrant)
+qdrant-client>=1.7.0
+
+# Semantic Chunking (Chonkie)
+chonkie[semantic]>=1.0.0
+
+# Google Cloud AI Platform (for Vertex AI Vector Search and Gemini)
+google-cloud-aiplatform>=1.38.0
+google-cloud-storage>=2.10.0
+
+# Embeddings (Free, Local)
+sentence-transformers>=2.2.0
+# Note: PyTorch should be installed separately using:
+# pip install torch --index-url https://download.pytorch.org/whl/cpu
+# This avoids DLL issues on Windows
+# 
+# If PyTorch DLL errors persist, you can use the alternative embedding
+# solution (embeddings_alternative.py) which uses scikit-learn instead
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Progress Bars
+tqdm>=4.65.0
+
+# HTTP Client for OpenRouter API
+requests>=2.31.0
+python-dotenv>=1.0.0
+
+# Local Embedding (Torch-less alternative)
+fastembed>=0.2.0
+
+# Alternative embedding (if PyTorch fails) - uncomment to use:
+# scikit-learn>=1.3.0
+
+# Optional: For better performance
+# transformers>=4.30.0  # Already included with sentence-transformers
