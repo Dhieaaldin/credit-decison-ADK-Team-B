@@ -35,6 +35,11 @@ check_methods.py
 # Large data files (CSV)
 *.csv
 
+# Video files
+*.mp4
+*.avi
+*.mov
+
 # OS files
 .DS_Store
 Thumbs.db
