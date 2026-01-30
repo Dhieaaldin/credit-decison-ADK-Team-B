@@ -1,0 +1,13 @@
+{
+    "applicant_name": "Verified Sub-Prime Applicant",
+    "loan_amount": 5000,
+    "annual_income": 35000,
+    "credit_score": 550,
+    "existing_debt": 2000,
+    "debt_to_income": 15.0,
+    "years_employed": 5,
+    "employment_status": "Employed",
+    "loan_purpose": "Debt Consolidation",
+    "state": "NY",
+    "emp_title": "Retail Clerk"
+}

@@ -1,0 +1,13 @@
+{
+    "applicant_name": "Verified Prime Applicant",
+    "loan_amount": 15000,
+    "annual_income": 120000,
+    "credit_score": 820,
+    "existing_debt": 5000,
+    "debt_to_income": 4.16,
+    "years_employed": 12,
+    "employment_status": "Employed",
+    "loan_purpose": "Home Improvement",
+    "state": "CA",
+    "emp_title": "Senior Engineer"
+}

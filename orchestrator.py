@@ -77,23 +77,36 @@ class LoanScreeningOrchestrator:
         print("="*70)
         
         if result.get("success"):
-            decision = result.get("decision", "UNKNOWN")
-            risk_score = result.get("risk_score", 0)
+            # Correctly extract overall default rate from pipeline result
+            overall_risk = result.get("overall_risk_score", {})
+            if isinstance(overall_risk, dict):
+                risk_score_value = overall_risk.get("overall_default_rate", 0.0)
+            else:
+                risk_score_value = 0.0
             
-            # Color-code decision
+            # Map results for display
+            decision = result.get("recommendation", "UNKNOWN")
+            confidence = result.get("confidence", 0.0)
+            if "decision" not in result:
+                result["decision"] = decision
+            
+            # Color-code decision symbol
             decision_symbol = "✅" if decision == "APPROVE" else "❌" if decision == "REJECT" else "⚠️"
             
-            print(f"\n{decision_symbol} DECISION: {decision}")
-            print(f"📊 RISK SCORE: {risk_score:.2%}")
+            print(f"\n{decision_symbol} DECISION: {decision} (Confidence: {confidence:.2%})")
+            print(f"📊 RISK SCORE: {risk_score_value:.2%}")
             
-            # Similar cases
+            # Similar cases display
             similar_cases = result.get("similar_cases", [])
             if similar_cases:
-                print(f"\n🔍 SIMILAR HISTORICAL CASES: {len(similar_cases)}")
+                print(f"\n🔍 SIMILAR HISTORICAL CASES (showing up to 3):")
                 for i, case in enumerate(similar_cases[:3], 1):
-                    print(f"   {i}. Loan ID: {case.get('id', 'N/A')} | "
-                          f"Amount: ${case.get('amount', 0):,.0f} | "
-                          f"Similarity: {case.get('similarity', 0):.2%}")
+                    print(
+                        f"  {i}. Loan ID: {case.get('id', 'N/A')} | "
+                        f"Amount: ${case.get('amount', 0):,.0f} | "
+                        f"Similarity: {case.get('similarity', 0):.2%} | "
+                        f"Defaulted: {'Yes' if case.get('defaulted', False) else 'No'}"
+                    )
             
             # Explanation
             explanation = result.get("explanation", "")
@@ -101,12 +114,27 @@ class LoanScreeningOrchestrator:
                 print(f"\n💡 EXPLANATION:")
                 print(f"   {explanation}")
             
-            # Risk factors
-            risk_factors = result.get("risk_factors", [])
-            if risk_factors:
+            # Risk factors (from per dimension analysis keys where risk is high)
+            per_dimension = result.get("per_dimension_analysis", {})
+            if per_dimension:
                 print(f"\n⚠️  RISK FACTORS:")
-                for factor in risk_factors[:5]:
-                    print(f"   • {factor}")
+                # Display risk factors with highest values (top 5)
+                # Fix: Sort by default_rate within the analysis dict
+                sorted_risks = sorted(
+                    per_dimension.items(), 
+                    key=lambda x: x[1].get('default_rate', 0) if isinstance(x[1], dict) else 0, 
+                    reverse=True
+                )
+                for factor, analysis in sorted_risks[:5]:
+                    score = analysis.get('default_rate', 0) if isinstance(analysis, dict) else 0
+                    print(f"   • {factor}: Risk score {score:.2%}")
+            
+            # Map recommendation to decision for consistency
+            if "recommendation" in result and "decision" not in result:
+                result["decision"] = result["recommendation"]
+            
+            # Extract score for external use
+            result["risk_score"] = risk_score_value
             
             print(f"\n⏱️  Processing Time: {elapsed_time:.2f}s")
             print("="*70 + "\n")

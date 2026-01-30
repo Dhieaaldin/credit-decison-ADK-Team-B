@@ -5,7 +5,7 @@ Manages a Qdrant collection with named vectors for loan applications.
 Each loan is stored as a single point with multiple semantic vectors.
 """
 
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Tuple
 import uuid
 import numpy as np
 
@@ -98,6 +98,22 @@ class QdrantVectorStore:
     # ------------------------
     # Ingestion (Generic API)
     # ------------------------
+    def upsert_batch(self,batch_points: List[Tuple[int, Dict[str, np.ndarray], Dict[str, Any]]]):
+        """
+        Upsert multiple points to Qdrant in a single batch.
+
+        Args:
+            batch_points: List of tuples (id, named_vectors, metadata)
+        """
+        points = []
+        for id_, named_vectors, metadata in batch_points:
+            vectors = {name: vector.tolist() for name, vector in named_vectors.items()}
+            points.append(PointStruct(id=id_, vector=vectors, payload=metadata))
+
+        self.client.upsert(
+            collection_name=self.COLLECTION_NAME,
+            points=points
+        )
 
     def upsert(
         self,

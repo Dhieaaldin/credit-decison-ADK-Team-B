@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Decision ADK | Advanced Risk Management</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <span>CreditADK</span>
+            </div>
+
+            <ul class="nav-menu">
+                <li><a href="#dashboard" class="nav-item active" onclick="switchView('dashboard')">
+                        <i class="fas fa-chart-line"></i> Dashboard
+                    </a></li>
+                <li><a href="#applications" class="nav-item" onclick="switchView('applications')">
+                        <i class="fas fa-list-check"></i> Applications
+                    </a></li>
+                <li><a href="#new-loan" class="nav-item" onclick="switchView('new-loan')">
+                        <i class="fas fa-file-invoice-dollar"></i> New Loan
+                    </a></li>
+                <li><a href="#settings" class="nav-item" onclick="switchView('settings')">
+                        <i class="fas fa-cog"></i> Settings
+                    </a></li>
+            </ul>
+
+            <div style="margin-top: auto; padding-top: 2rem; border-top: 1px solid var(--glass-border);">
+                <div id="systemStatus" class="status-indicator">
+                    <small>System: <span id="statusText">Checking...</span></small>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+
+            <!-- VIEW: DASHBOARD -->
+            <section id="view-dashboard" class="view active">
+                <header class="view-header">
+                    <h1>Decision Dashboard</h1>
+                    <p class="text-muted">Real-time model performance and metrics</p>
+                </header>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Volume</div>
+                        <div class="stat-value" id="stats-total">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Approval Rate</div>
+                        <div class="stat-value" id="stats-approval" style="color: var(--success)">-%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg. Risk Score</div>
+                        <div class="stat-value" id="stats-risk">-%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg. Latency</div>
+                        <div class="stat-value" id="stats-latency">-ms</div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem;">
+                    <div class="card">
+                        <h3>Volume Trend</h3>
+                        <div class="chart-container">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3>Decision Mix</h3>
+                        <div class="chart-container">
+                            <canvas id="mixChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: APPLICATIONS -->
+            <section id="view-applications" class="view" style="display: none;">
+                <header class="view-header">
+                    <h1>Application History</h1>
+                    <p class="text-muted">Manage and audit recent decisions</p>
+                </header>
+
+                <div class="card">
+                    <div class="table-container">
+                        <table id="applicationsTable">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Decision ID</th>
+                                    <th>Risk Score</th>
+                                    <th>Decision</th>
+                                    <th>Confidence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="applicationsBody">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW: NEW LOAN (Multi-step Wizard) -->
+            <section id="view-new-loan" class="view" style="display: none;">
+                <header class="view-header">
+                    <h1>New Loan Application</h1>
+                    <p class="text-muted">Multi-step intelligent screening process</p>
+                </header>
+
+                <div class="card">
+                    <div class="wizard-progress">
+                        <div class="progress-bar">
+                            <div id="wizardFill" class="progress-fill" style="width: 25%"></div>
+                        </div>
+                        <div class="steps-labels">
+                            <span>Personal</span>
+                            <span>Financial</span>
+                            <span>Professional</span>
+                            <span>Review</span>
+                        </div>
+                    </div>
+
+                    <form id="loanWizard">
+                        <!-- Step 1: Personal -->
+                        <div class="form-step active" data-step="1">
+                            <h3>Step 1: Personal Information</h3>
+                            <div class="form-group">
+                                <label>Applicant Full Name</label>
+                                <input type="text" name="applicant_name" required placeholder="John Doe">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>State of Residence</label>
+                                    <select name="state">
+                                        <option value="CA">California</option>
+                                        <option value="NY">New York</option>
+                                        <option value="TX">Texas</option>
+                                        <option value="FL">Florida</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Homeownership</label>
+                                    <select name="homeownership">
+                                        <option value="RENT">Rent</option>
+                                        <option value="MORTGAGE">Mortgage</option>
+                                        <option value="OWN">Own</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Financial -->
+                        <div class="form-step" data-step="2">
+                            <h3>Step 2: Financial Details</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Requested Loan Amount ($)</label>
+                                    <input type="number" name="loan_amount" required min="1000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Annual Income ($)</label>
+                                    <input type="number" name="annual_income" required min="10000">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Existing Monthly Debt ($)</label>
+                                    <input type="number" name="existing_debt" value="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Loan Purpose</label>
+                                    <select name="loan_purpose">
+                                        <option value="debt_consolidation">Debt Consolidation</option>
+                                        <option value="home_improvement">Home Improvement</option>
+                                        <option value="credit_card">Credit Card</option>
+                                        <option value="major_purchase">Major Purchase</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- DTI Safety Warning (Dynamic) -->
+                            <div id="dtiWarning" class="alert-box error"
+                                style="display: none; margin-top: 1rem; animation: slideIn 0.3s ease-out;">
+                                <div style="display: flex; gap: 1rem; align-items: flex-start;">
+                                    <i class="fas fa-ban" style="font-size: 1.5rem; margin-top: 0.2rem;"></i>
+                                    <div>
+                                        <h4 style="margin-bottom: 0.5rem;">Excessive DTI Detected (<span
+                                                id="dtiValue"></span>%)</h4>
+                                        <p style="margin-bottom: 0.5rem;">Your Debt-to-Income ratio exceeds the 50%
+                                            automatic safety limit. You cannot proceed with this loan amount.</p>
+                                        <div
+                                            style="background: rgba(255,255,255,0.1); padding: 0.75rem; border-radius: 4px; margin-top: 0.5rem;">
+                                            <small
+                                                style="display: block; text-transform: uppercase; margin-bottom: 0.25rem;">Max
+                                                Viable Loan Amount</small>
+                                            <strong style="font-size: 1.2rem; color: #fff;"
+                                                id="maxViableLoan">--</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Employment & Credit -->
+                        <div class="form-step" data-step="3">
+                            <h3>Step 3: Professional & Credit Profile</h3>
+                            <div class="form-group">
+                                <label>Job Title / Occupation</label>
+                                <input type="text" name="employment_status" placeholder="e.g. Senior Software Engineer">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Years at Current Employer</label>
+                                    <input type="number" name="years_employed" step="0.5" value="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Estimated Credit Score</label>
+                                    <input type="number" name="credit_score" min="300" max="850" value="700">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Review -->
+                        <div class="form-step" data-step="4">
+                            <h3>Step 4: Review & Submit</h3>
+                            <p>Please confirm all details are correct before sending for analysis.</p>
+                            <div id="reviewSummary" class="review-grid card" style="background: rgba(0,0,0,0.2)">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+
+                        <div class="wizard-buttons">
+                            <button type="button" id="prevBtn" class="btn btn-secondary"
+                                style="display: none;">Back</button>
+                            <button type="button" id="nextBtn" class="btn btn-primary">Next</button>
+                            <button type="submit" id="submitBtn" class="btn btn-primary" style="display: none;">
+                                <span class="btn-text">Run Analysis</span>
+                                <span class="btn-loader" style="display:none">Processing...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Processing Timeline (Visible during analysis) -->
+                <div id="processingTimeline" class="card"
+                    style="display: none; margin-top: 2rem; border-left: 4px solid var(--primary);">
+                    <h3><i class="fas fa-spinner fa-spin"></i> Intelligent Screening in Progress...</h3>
+                    <div class="timeline-steps" style="margin-top: 1.5rem;">
+                        <div class="t-step" id="t-step-1"><i class="far fa-circle"></i> Validating application data...
+                            <span class="t-time"></span>
+                        </div>
+                        <div class="t-step" id="t-step-2"><i class="far fa-circle"></i> Searching historical cases...
+                            <span class="t-time"></span>
+                        </div>
+                        <div class="t-step" id="t-step-3"><i class="far fa-circle"></i> Analyzing risk dimensions...
+                            <span class="t-time"></span>
+                        </div>
+                        <div class="t-step" id="t-step-4"><i class="far fa-circle"></i> Finalizing AI decision... <span
+                                class="t-time"></span></div>
+                    </div>
+                </div>
+
+                <!-- Results Integrated into Wizard -->
+                <div id="wizardResults" class="view" style="display: none; margin-top: 2rem;">
+                    <!-- Results content from app.js -->
+                </div>
+            </section>
+
+            <!-- VIEW: DETAILS (Modal-like view) -->
+            <section id="view-details" class="view" style="display: none;">
+                <button class="btn btn-secondary" onclick="switchView('applications')" style="margin-bottom: 1rem;">
+                    <i class="fas fa-arrow-left"></i> Back to History
+                </button>
+                <div id="applicationDetailContent">
+                    <!-- Loaded via JS -->
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>

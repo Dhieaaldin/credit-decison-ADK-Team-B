@@ -71,7 +71,7 @@ def create_chunks(row: Dict[str, Any]) -> Dict[str, str]:
 def process_batch(batch_data: List[Tuple[int, Dict[str, Any]]]) -> List[Tuple[int, Dict[str, Any], Dict[str, np.ndarray], Dict[str, Any]]]:
     """
     Process a batch of rows in parallel worker.
-    Each worker has its own embedding model instance.
+    Embeds all chunk texts for the entire batch in a single call.
     
     Args:
         batch_data: List of (idx, row_dict) tuples
@@ -81,34 +81,48 @@ def process_batch(batch_data: List[Tuple[int, Dict[str, Any]]]) -> List[Tuple[in
     """
     global _embedding_model
     results = []
-    
+
+    all_texts = []
+    row_chunk_counts = []  # store (idx, num_chunks) per row to split embeddings later
+    rows_chunks = []       # store chunks dict for each row for later mapping
+
+    # Collect all chunk texts from all rows in batch
     for idx, row in batch_data:
-        try:
-            chunks = create_chunks(row)
-            
-            # Batch embed all chunk texts together
-            texts = list(chunks.values())
-            embeddings_array = _embedding_model.embed_batch(texts)
-            
-            # Map back to chunk types
-            embeddings = {
-                chunk_type: embeddings_array[i]
-                for i, chunk_type in enumerate(chunks.keys())
-            }
-            
-            metadata = {
-                "loan_id": row.get("id", "unknown"),
-                "loan_amount": float(row.get("loan_amount", 0)),
-                "annual_income": float(row.get("annual_income", 0)),
-                "state": row.get("state", "unknown"),
-                "purpose": row.get("loan_purpose", "unknown"),
-            }
-            
-            results.append((idx, chunks, embeddings, metadata))
-        except Exception as e:
-            print(f"⚠️ Error processing row {idx}: {e}")
-            continue
-    
+        chunks = create_chunks(row)
+        rows_chunks.append(chunks)
+        texts = list(chunks.values())
+        row_chunk_counts.append((idx, len(texts)))
+        all_texts.extend(texts)
+
+    # Embed all chunk texts in one batch call
+    all_embeddings = _embedding_model.embed_batch(all_texts)
+
+    # Split embeddings back per row
+    pos = 0
+    for (idx, chunk_count), chunks in zip(row_chunk_counts, rows_chunks):
+        chunk_embeddings = all_embeddings[pos : pos + chunk_count]
+        pos += chunk_count
+
+        embeddings = {
+            chunk_type: chunk_embeddings[i]
+            for i, chunk_type in enumerate(chunks.keys())
+        }
+
+        # Use the row corresponding to idx for metadata
+        row_data = next(row for i, row in batch_data if i == idx)
+
+        metadata = {
+            "loan_id": row_data.get("id", "unknown"),
+            "loan_amount": float(row_data.get("loan_amount", 0)),
+            "annual_income": float(row_data.get("annual_income", 0)),
+            "state": row_data.get("state", "unknown"),
+            "purpose": row_data.get("loan_purpose", "unknown"),
+            "loan_status": row_data.get("loan_status", "Unknown"),
+            "grade": row_data.get("grade", "N/A"),
+        }
+
+        results.append((idx, chunks, embeddings, metadata))
+
     return results
 
 
@@ -183,19 +197,17 @@ class DatasetLoader:
                 total=len(batches),
                 desc="Embedding & uploading",
             ):
-                # Upload successfully processed results
-                for idx, chunks, embeddings, metadata in batch_results:
-                    try:
-                        self.vector_store.upsert(
-                            id=idx,
-                            named_vectors=embeddings,
-                            metadata=metadata,
-                        )
-                        success += 1
-                    except Exception as e:
-                        print(f"⚠️ Error uploading row {idx}: {e}")
+                try:
+                    self.vector_store.upsert_batch([
+                        (idx, embeddings, metadata)
+                        for idx, _, embeddings, metadata in batch_results
+                    ])
+                    success += len(batch_results)
+                except Exception as e:
+                    print(f"⚠️ Error uploading batch: {e}")
 
         print(f"\n✅ Successfully ingested {success}/{total} records")
+
 
 # ------------------------
 # CLI

@@ -8,6 +8,8 @@ import os
 import requests
 import json
 from dotenv import load_dotenv
+from agents.base_agent import BaseAgent, AgentMessage, AgentResponse
+from typing import Dict, Any, List
 
 load_dotenv()
 
@@ -126,7 +128,7 @@ class ExplanationAgent(BaseAgent):
         self,
         decision_data: Dict[str, Any],
         per_dimension_risk: Dict[str, Dict[str, Any]],
-        anomalies: list[Dict[str, str]]
+        anomalies: List[Dict[str, str]]
     ) -> str:
         """Generate explanation using OpenRouter API."""
         try:
@@ -141,7 +143,7 @@ class ExplanationAgent(BaseAgent):
                     "Content-Type": "application/json",
                 },
                 data=json.dumps({
-                    "model": "google/gemini-2.0-flash-exp:free", # Using a reliable free model
+                    "model": "nvidia/nemotron-3-nano-30b-a3b:free",  # Using a reliable free model
                     "messages": [
                         {"role": "system", "content": "You are a professional credit risk analyst providing justifications for loan screening decisions."},
                         {"role": "user", "content": prompt}
@@ -164,7 +166,7 @@ class ExplanationAgent(BaseAgent):
         self,
         decision_data: Dict[str, Any],
         per_dimension_risk: Dict[str, Dict[str, Any]],
-        anomalies: list[Dict[str, str]]
+        anomalies: List[Dict[str, str]]
     ) -> str:
         """Generate explanation using Google Gemini AI."""
         try:
@@ -185,7 +187,7 @@ class ExplanationAgent(BaseAgent):
         self,
         decision_data: Dict[str, Any],
         per_dimension_risk: Dict[str, Dict[str, Any]],
-        anomalies: list[Dict[str, str]]
+        anomalies: List[Dict[str, str]]
     ) -> str:
         """Generate explanation using template."""
         recommendation = decision_data.get("recommendation", "UNKNOWN")
@@ -204,15 +206,17 @@ class ExplanationAgent(BaseAgent):
             risk_level = analysis.get("risk_level", "UNKNOWN")
             default_rate_dim = analysis.get("default_rate", 0.0)
             avg_sim = analysis.get("avg_similarity", 0.0)
+            status_summary = analysis.get("status_summary", "Unknown status breakdown")
             
-            explanation += f"- {chunk_type.replace('_', ' ').title()}: {risk_level} risk "
-            explanation += f"(default rate: {default_rate_dim:.1%}, similarity: {avg_sim:.3f})\n"
+            explanation += f"- {chunk_type.replace('_', ' ').title()}: {risk_level} risk\n"
+            explanation += f"  (Default Rate: {default_rate_dim:.1%}, Similarity: {avg_sim:.3f})\n"
+            explanation += f"  (Matches: {status_summary})\n"
         
         # Anomalies
         if anomalies:
             explanation += f"\nDetected Anomalies:\n"
             for i, anomaly in enumerate(anomalies, 1):
-                explanation += f"{i}. [{anomaly['severity']}] {anomaly['description']}\n"
+                explanation += f"{i}. [{anomaly.get('severity', 'UNKNOWN')}] {anomaly.get('description', '')}\n"
         
         # Rationale
         explanation += f"\nRationale:\n"
@@ -232,7 +236,7 @@ class ExplanationAgent(BaseAgent):
         self,
         decision_data: Dict[str, Any],
         per_dimension_risk: Dict[str, Dict[str, Any]],
-        anomalies: list[Dict[str, str]]
+        anomalies: List[Dict[str, str]]
     ) -> str:
         """Build prompt for AI explanation generation."""
         return f"""
@@ -260,17 +264,19 @@ Write in plain English suitable for a credit analyst or loan officer.
         """Format risk analysis for prompt."""
         lines = []
         for chunk_type, analysis in per_dimension_risk.items():
+            status_summary = analysis.get("status_summary", "Unknown status breakdown")
             lines.append(
-                f"- {chunk_type}: {analysis.get('risk_level')} risk "
-                f"(default rate: {analysis.get('default_rate', 0.0):.1%})"
+                f"- {chunk_type.replace('_', ' ').title()}: {analysis.get('risk_level', 'UNKNOWN')} risk "
+                f"(default rate: {analysis.get('default_rate', 0.0):.1%})\n"
+                f"  Historical Similarity Data: {status_summary}"
             )
         return "\n".join(lines)
     
-    def _format_anomalies(self, anomalies: list[Dict[str, str]]) -> str:
+    def _format_anomalies(self, anomalies: List[Dict[str, str]]) -> str:
         """Format anomalies for prompt."""
         if not anomalies:
             return "None"
         return "\n".join([
-            f"- [{a['severity']}] {a['type']}: {a['description']}"
+            f"- [{a.get('severity', 'UNKNOWN')}] {a.get('type', 'Unknown Type')}: {a.get('description', '')}"
             for a in anomalies
         ])

@@ -1,63 +1,139 @@
-# Credit Decision ADK - Multi-Agent Loan Screening System
+# Credit Decision ADK (Agent Development Kit)
 
-## 🚀 Overview
-Credit Decision ADK is an advanced, multi-agent automated loan screening system designed to provide deep cognitive analysis of credit applications. It leverages semantic vector search and a pipeline of specialized AI agents to evaluate risk, retrieve similar historical cases, and provide human-readable explanations for credit decisions.
+A high-performance, multi-agent credit screening platform that replaces rigid rule-based underwriting with an intelligent, weighted-risk decision engine. This system leverages **Qdrant** for vector-based historical analysis and **Google Gemini** (via OpenRouter) for explainable AI reasoning.
 
-## 🧠 Key Features
-- **Multi-Agent Orchestration**: A modular pipeline of 6+ specialized agents (Ingestion, Chunking, Retrieval, Risk, Decision, Explanation).
-- **Semantic Risk Assessment**: Uses `Chonkie` for semantic chunking and `FastEmbed` for local high-performance embeddings.
-- **Vector Intelligence**: Integrated with **Qdrant** for high-speed similarity search, allowing the system to "remember" and compare new applications against historical outcomes.
-- **Local & Cloud Flexible**: Supports local execution (in-memory/disk) and scales to Google Cloud (Vertex AI) for production.
-- **Automated Explainability**: Generates detailed justifications for every "Approve" or "Reject" decision.
+---
 
-## 🛠️ Installation
+## 🚀 Objectives
+-   **Replace Rigid Cutoffs**: Move beyond hard credit score floors (e.g., "Reject all < 600") to a **Weighted Risk Multiplier** model that evaluates the whole financial picture.
+-   **Automate Manual Review**: Use vector search to find "Similar Historical Cases" and determine if a borderline applicant behaves like a good payer or a defaulter.
+-   **Explainable AI**: Provide transparent, regulator-friendly explanations (e.g., "Approved because exceptional DTI compensates for low credit score").
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd "credit decision ADK"
-   ```
+## 🛠️ Technology Stack
 
-2. **Install dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *Note: For Windows users, it is recommended to install PyTorch separately if needed, or stick to the default FastEmbed backend.*
+| Component | Technology | Version |
+| :--- | :--- | :--- |
+| **Language** | Python | 3.12 |
+| **Orchestration** | Multi-Agent Pipeline | Custom ADK |
+| **Vector Database** | **Qdrant** | 1.7.0+ |
+| **Embeddings** | FastEmbed (`bge-small-en-v1.5`) | 0.2.0+ |
+| **LLM (Reasoning)** | Google Gemini / OpenRouter | API |
+| **Frontend** | Vanilla JS / Glassmorphism CSS | ES6+ |
+| **Monitoring** | Custom Audit Logger | Internal |
 
-3. **Environment Setup**:
-   Create a `.env` file with your API keys:
-   ```env
-   OPENROUTER_API_KEY=your_key_here
-   ```
-
-## 🏃 Usage
-
-### 📊 Load Historical Data
-To populate the vector store with historical loan data:
-```bash
-python load_dataset.py
-```
-
-### 📋 Screen an Application
-To run a test screening using example data:
-```bash
-python orchestrator.py --test
-```
-
-### 🎯 Interactive Mode
-To interactively evaluate applications:
-```bash
-python orchestrator.py --interactive
-```
+---
 
 ## 🏗️ Architecture
-The system follows a sequential multi-agent pipeline:
-1. **Ingestion Agent**: Validates and cleans raw application data.
-2. **Chunking Agent**: Breaks data into semantic dimensions (Income Stability, Credit Behavior, etc.).
-3. **Retrieval Agent**: Queries **Qdrant** for similar historical cases based on these dimensions.
-4. **Risk Agent**: Analyzes similarities and calculates a multi-dimensional risk score.
-5. **Decision Agent**: Makes the final Approved/Rejected recommendation.
-6. **Explanation Agent**: Synthesizes the findings into a natural language report.
 
-## 📄 License
-MIT
+The system uses a **Sequential Multi-Agent Pipeline** to process applications:
+
+```mermaid
+graph LR
+    User[Applicant] --> Ingestion[Ingestion Agent]
+    Ingestion --> Safety[Pre-Search Safety Gate]
+    Safety -- "Viable" --> Chunking[Chunking Agent]
+    Safety -- "Impossible (DTI>50%)" --> Reject[Auto-Reject]
+    Chunking --> Retrieval[Retrieval Agent]
+    Retrieval -- "Query Qdrant" --> VectorDB[(Qdrant Cloud/Local)]
+    VectorDB -- "Top 5 Similar Cases" --> Retrieval
+    Retrieval --> Risk[Risk Agent]
+    Risk --> Decision[Decision Agent]
+    Decision -- "Weighted Score" --> Explanation[Explanation Agent]
+    Explanation --> UI[Dashboard/Wizard]
+```
+
+### Project Hierarchy
+```text
+credit-decision-adk/
+├── agents/                 # Intelligent specialized agents
+│   ├── decision_agent.py   # Weighted risk logic (1.5x/2.0x multipliers)
+│   ├── retrieval_agent.py  # Qdrant vector search implementation
+│   ├── risk_agent.py       # Bayesian probability aggregation
+│   └── ...
+├── data/                   # SQLite database and CSV schemas
+├── monitoring/             # Audit logs and model performance tracking
+├── static/                 # Frontend assets (Glassmorphism CSS, JS)
+├── templates/              # HTML Jinja2 templates
+├── multi_agent_pipeline.py # Core orchestrator
+├── app.py                  # Flask web server entry point
+├── requirements.txt        # Python dependencies
+└── README.md               # Project documentation
+```
+
+---
+
+## 🧠 Qdrant Integration
+Qdrant is the core "Memory" of the system, enabling it to learn from history.
+
+1.  **Vectorization**: The `ChunkingAgent` converts application data (Debt, Income, Loan Purpose, etc.) into a semantic string and embeds it using **FastEmbed (`BAAI/bge-small-en-v1.5`)** into a 384-dimensional vector.
+2.  **Collection**: Data is stored in a Qdrant collection named `credit_decisions`.
+3.  **Similarity Search**: The `RetrievalAgent` queries Qdrant for the **Top 5 Nearest Neighbors** (Cosine Similarity).
+    -   *Logic*: If the 5 most mathematically similar past applicants all defaulted, the current applicant is High Risk.
+4.  **Hybrid Filter**: Search is filtered by hard constraints (e.g., "Must be same state", "Must be similar loan amount") to ensure relevance.
+
+---
+
+## ⚡ Setup & Installation
+
+### Prerequisites
+-   Python 3.10+
+-   Docker (for Qdrant) is recommended, or run Qdrant locally/cloud.
+
+### 1. Clone & Install
+```bash
+git clone https://github.com/Dhieaaldin/credit-decison-ADK.git
+cd credit-decison-ADK
+python -m venv venv
+# Windows:
+venv\Scripts\activate
+# Mac/Linux:
+# source venv/bin/activate
+
+pip install -r requirements.txt
+```
+
+### 2. Configure Environment
+Create a `.env` file in the root:
+```ini
+OPENROUTER_API_KEY=your_key_here
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+FLASK_ENV=development
+```
+
+### 3. Start Qdrant (Docker)
+```bash
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+### 4. Seed Database (Optional)
+Populate the vector database with synthetic historical data:
+```bash
+python scripts/seed_db.py
+```
+
+### 5. Run the Application
+```bash
+python app.py
+```
+Access the dashboard at `http://localhost:5000`.
+
+---
+
+## 🖥️ Usage & Validation
+
+### 1. Pre-screening Demo (Safety Gates)
+-   Go to **New Application**.
+-   Enter **Annual Income: $30,000** and **Loan Amount: $70,000**.
+-   **Result**: The UI instantly blocks meaningful submission with "Income Insufficiency" warning.
+
+### 2. "Borderline Approval" Demo (The "Dhia" Case)
+-   Click **Fill Demo Data** (console command `fillDemoData()` available in dev tools).
+-   Set **Credit Score** to `599`.
+-   Set **DTI** to `6.9%`.
+-   **Submit**: The system will **APPROVE** (or recommend Manual Review) instead of auto-rejecting, citing *"Exceptional debt-to-income resilience compensates for borderline credit score."*
+
+### 3. Audit Trail
+-   Navigate to the **History** tab.
+-   Click any case to see the **Technical Audit** view.
+-   Verify the **Risk Bars** and **Raw Input Data** match the decision logic.

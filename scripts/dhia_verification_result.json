@@ -1,0 +1,219 @@
+{
+    "success": true,
+    "application_id": "APP-7E8071112290",
+    "recommendation": "MANUAL_REVIEW",
+    "confidence": 0.85,
+    "model_confidence": 1.0,
+    "decision_reasons": [
+        "Credit profile score (599) identified as an elevated risk factor",
+        "Historical peer analysis indicates strong financial stability (Default: 4.3%)",
+        "Exceptional debt-to-income resilience (6.9%) compensates for other markers",
+        "Weighted risk profile (15.0%) sits in discretionary zone"
+    ],
+    "per_dimension_analysis": {
+        "income_stability": {
+            "default_rate": 0.0,
+            "avg_similarity": 0.8311689250000001,
+            "num_matches": 20,
+            "risk_level": "LOW",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 8.226797794333333,
+            "status_distribution": {
+                "Current": 18,
+                "Fully Paid": 2
+            },
+            "status_summary": "20 Good Standing, 0 Defaulted"
+        },
+        "credit_behavior": {
+            "default_rate": 0.1037334949908395,
+            "avg_similarity": 0.8609059475,
+            "num_matches": 20,
+            "risk_level": "LOW",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 8.093568524555556,
+            "status_distribution": {
+                "Current": 18,
+                "Late (16-30 days)": 1,
+                "Late (31-120 days)": 1
+            },
+            "status_summary": "18 Good Standing, 0 Defaulted"
+        },
+        "debt_obligations": {
+            "default_rate": 0.0,
+            "avg_similarity": 0.8885169994999998,
+            "num_matches": 20,
+            "risk_level": "LOW",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 8.72249240477,
+            "status_distribution": {
+                "Current": 19,
+                "Fully Paid": 1
+            },
+            "status_summary": "20 Good Standing, 0 Defaulted"
+        },
+        "recent_behavior": {
+            "default_rate": 0.0,
+            "avg_similarity": 0.8932568779999996,
+            "num_matches": 20,
+            "risk_level": "LOW",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 8.160137283233334,
+            "status_distribution": {
+                "Current": 19,
+                "Fully Paid": 1
+            },
+            "status_summary": "20 Good Standing, 0 Defaulted"
+        },
+        "account_portfolio": {
+            "default_rate": 0.1452098147668769,
+            "avg_similarity": 0.8881762859999999,
+            "num_matches": 20,
+            "risk_level": "MEDIUM",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 8.657896975616667,
+            "status_distribution": {
+                "Current": 17,
+                "Late (31-120 days)": 3
+            },
+            "status_summary": "17 Good Standing, 0 Defaulted"
+        },
+        "loan_context": {
+            "default_rate": 0.045076943817023866,
+            "avg_similarity": 0.8485240045,
+            "num_matches": 20,
+            "risk_level": "LOW",
+            "confidence": 1.0,
+            "used_prior": false,
+            "effective_sample_size": 7.9757240410833345,
+            "status_distribution": {
+                "Current": 19,
+                "Late (31-120 days)": 1
+            },
+            "status_summary": "19 Good Standing, 0 Defaulted"
+        }
+    },
+    "overall_risk_score": {
+        "overall_default_rate": 0.04270820241524876,
+        "overall_confidence": 1.0,
+        "weighted_average": true,
+        "num_dimensions": 6,
+        "dimension_weights_used": {
+            "income_stability": 0.2,
+            "credit_behavior": 0.25,
+            "debt_obligations": 0.25,
+            "recent_behavior": 0.15,
+            "account_portfolio": 0.1,
+            "loan_context": 0.05
+        }
+    },
+    "anomalies": [],
+    "explanation": "Decision: MANUAL_REVIEW (Confidence: 85.0%)\n\nOverall Analysis:\n- Similar historical loans had a default rate of 4.3%\n- Found 0 potential risk factors\n\nPer-Dimension Risk Assessment:\n- Income Stability: LOW risk\n  (Default Rate: 0.0%, Similarity: 0.831)\n  (Matches: 20 Good Standing, 0 Defaulted)\n- Credit Behavior: LOW risk\n  (Default Rate: 10.4%, Similarity: 0.861)\n  (Matches: 18 Good Standing, 0 Defaulted)\n- Debt Obligations: LOW risk\n  (Default Rate: 0.0%, Similarity: 0.889)\n  (Matches: 20 Good Standing, 0 Defaulted)\n- Recent Behavior: LOW risk\n  (Default Rate: 0.0%, Similarity: 0.893)\n  (Matches: 20 Good Standing, 0 Defaulted)\n- Account Portfolio: MEDIUM risk\n  (Default Rate: 14.5%, Similarity: 0.888)\n  (Matches: 17 Good Standing, 0 Defaulted)\n- Loan Context: LOW risk\n  (Default Rate: 4.5%, Similarity: 0.849)\n  (Matches: 19 Good Standing, 0 Defaulted)\n\nRationale:\nThe application shows mixed signals. Some dimensions indicate low risk while others show concerns. Manual review by a credit analyst is recommended.",
+    "similar_cases": [
+        {
+            "id": "1185",
+            "similarity": 0.89411116,
+            "amount": 12000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "138",
+            "similarity": 0.89323044,
+            "amount": 32000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "debt_obligations"
+        },
+        {
+            "id": "532",
+            "similarity": 0.89323044,
+            "amount": 32000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1515",
+            "similarity": 0.89323044,
+            "amount": 30000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1388",
+            "similarity": 0.89323044,
+            "amount": 12000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1058",
+            "similarity": 0.89323044,
+            "amount": 16000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "609",
+            "similarity": 0.8932053,
+            "amount": 40000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1616",
+            "similarity": 0.8932053,
+            "amount": 11000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1774",
+            "similarity": 0.8932053,
+            "amount": 40000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        },
+        {
+            "id": "1754",
+            "similarity": 0.8932053,
+            "amount": 13000.0,
+            "defaulted": false,
+            "outcome": "Good Standing",
+            "credit_score": "N/A",
+            "dimension": "recent_behavior"
+        }
+    ],
+    "processing_metadata": {
+        "application_id": "APP-7E8071112290",
+        "total_latency_seconds": 42.79279112815857,
+        "ingestion_time": 0.0016145706176757812,
+        "chunking_time": 0.0,
+        "retrieval_time": 30.47478461265564,
+        "risk_analysis_time": 0.00654292106628418,
+        "decision_time": 0.0,
+        "explanation_time": 11.674792051315308
+    },
+    "monitor_id": null
+}
