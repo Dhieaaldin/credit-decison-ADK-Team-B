@@ -46,12 +46,23 @@ flowchart LR
 | **Embedding Model** | FastEmbed (BAAI/bge-small-en-v1.5) | Text embeddings (384 dimensions) |
 | **Vector Database** | Qdrant | Similarity search & historical case storage |
 | **AI Explanations** | OpenRouter / Google Gemini (optional) | Natural language generation |
-| **Semantic Chunking** | Custom implementation | Domain-specific segmentation |
+| **Semantic Chunking** | Chonkie (recursive character split) | Domain-specific segmentation |
 | **Parallelization** | Python multiprocessing | Dataset ingestion acceleration |
 
 ---
 
 ## 3. Multi-Agent Pipeline
+
+### 3.1 Strategic Safety Gate (Pre-Analysis)
+Before engaging the AI agents, the orchestrator applies a mathematically rigorous "Strategic Safety Gate" to filter out legally or financially unviable applications.
+
+ **Gate criteria:**
+1. **Hard DTI Ceiling**: Rejects if DTI > 50% (includes estimated new loan payment).
+2. **Income Sufficiency**: Rejects if Loan Amount > 2.0x Annual Income.
+
+Applications failing this gate are immediately rejected with 100% confidence, saving computational resources.
+
+### 3.2 Agent Pipeline Overview
 
 The system follows a sequential multi-agent pipeline with 6 specialized agents:
 
@@ -153,11 +164,16 @@ SD, TN, TX, UT, VT, VA, WA, WV, WI, WY
 
 | Threshold | Value | Description |
 |-----------|-------|-------------|
-| **High Default Rate** | 40% | Applications with > 40% default rate among similar cases are HIGH risk |
-| **Low Default Rate** | 15% | Applications with < 15% default rate are LOW risk |
+| **High Default Rate** | 35% | Applications with > 35% default rate among similar cases are HIGH risk |
+| **Low Default Rate** | 12% | Applications with < 12% default rate are LOW risk |
 | **Low Similarity** | 0.5 | Average similarity < 0.5 triggers LOW_SIMILARITY anomaly |
 | **High DTI** | 40% | Debt-to-income > 40% triggers HIGH_DEBT_TO_INCOME anomaly |
 | **High Collections** | $10,000 | Collections > $10,000 triggers HIGH_COLLECTIONS anomaly |
+
+#### Bayesian Risk Estimation
+For cases with sparse historical matches (low sample size), the system applies **Bayesian Priors** to smooth the default rate estimation.
+- **Prior Default Rate**: 15% (Population average)
+- **Prior Weight**: 3.0 (Equivalent to 3 observations)
 
 #### Risk Level Classification
 
@@ -214,6 +230,12 @@ flowchart TD
 | **Approve Threshold** | < 15% default rate | Low risk applications are auto-approved |
 | **Reject Threshold** | > 40% default rate | High risk applications are auto-rejected |
 | **Max High-Severity Anomalies** | 1 | More than 1 high-severity anomaly triggers rejection |
+
+#### Strategic Credit Multiplier
+Risk scores are adjusted based on applicant credit score to account for non-semantic risk factors:
+- **Score < 580**: Risk × 2.0 (Significant penalty)
+- **Score 580-600**: Risk × 1.5 (Moderate penalty)
+- **Score > 600**: No multiplier
 
 #### Confidence Calculation
 
@@ -457,7 +479,9 @@ The system addresses explainability through:
 | `/` | GET | Main web interface |
 | `/api/health` | GET | Health check |
 | `/api/evaluate` | POST | Evaluate loan application |
-| `/api/history` | GET | Get application history (placeholder) |
+| `/api/applications` | GET | Get application history |
+| `/api/applications/<id>` | GET | Get detailed application result |
+| `/api/dashboard/stats` | GET | Get aggregated dashboard statistics |
 
 ### 10.2 Evaluate Request Format
 
